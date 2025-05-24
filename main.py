@@ -37,7 +37,7 @@ def authenticate_google_drive():
             # For initial setup - run this locally first
             if os.path.exists('credentials.json'):
                 flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-                creds = flow.run_console()
+                creds = flow.run_local_server(port=0)
             else:
                 raise Exception("No credentials.json found and no valid token available")
         
@@ -52,22 +52,76 @@ def authenticate_google_drive():
 def download_latest_mygov():
     print("Checking website for latest MyGov issue...")
     try:
-        response = requests.get(BASE_URL)
+        # Disable SSL warnings for this specific case
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        
+        response = requests.get(BASE_URL, verify=False)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         
+        # Look for MyGov PDF links
         links = soup.find_all('a', href=True)
-        mygov_links = [
-            link['href'] for link in links
-            if KEYWORD.lower() in link['href'].lower() and link['href'].endswith(".pdf")
-        ]
+        mygov_links = []
+        
+        for link in links:
+            href = link['href']
+            # Check if it's a MyGov PDF
+            if KEYWORD.lower() in href.lower() and href.endswith(".pdf"):
+                mygov_links.append(href)
         
         if not mygov_links:
             print("No MyGov PDFs found.")
             return None
         
-        # Get the latest link (assuming the last one is most recent)
-        latest_link = mygov_links[-1]
+        print(f"Found {len(mygov_links)} MyGov PDFs")
+        
+        # Sort by extracting dates from filenames to get the most recent
+        import re
+        from datetime import datetime
+        
+        def extract_date_from_url(url):
+            # Look for date patterns in the URL like "2025-05" or "20th%20May%202025"
+            patterns = [
+                r'(\d{4})-(\d{2})',  # YYYY-MM format
+                r'(\d{1,2})(?:st|nd|rd|th)?%20(\w+)%20(\d{4})',  # Day Month Year with %20
+                r'(\d{1,2})(?:st|nd|rd|th)?\s+(\w+)\s+(\d{4})'   # Day Month Year with spaces
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, url, re.IGNORECASE)
+                if match:
+                    try:
+                        if len(match.groups()) == 2:  # YYYY-MM format
+                            year, month = int(match.group(1)), int(match.group(2))
+                            return datetime(year, month, 1)
+                        else:  # Day Month Year format
+                            day = int(match.group(1))
+                            month_str = match.group(2).lower()
+                            year = int(match.group(3))
+                            
+                            month_map = {
+                                'january': 1, 'february': 2, 'march': 3, 'april': 4,
+                                'may': 5, 'june': 6, 'july': 7, 'august': 8,
+                                'september': 9, 'october': 10, 'november': 11, 'december': 12
+                            }
+                            month = month_map.get(month_str, 1)
+                            return datetime(year, month, day)
+                    except:
+                        continue
+            return datetime(1900, 1, 1)  # Very old date as fallback
+        
+        # Sort links by date (most recent first)
+        dated_links = [(link, extract_date_from_url(link)) for link in mygov_links]
+        dated_links.sort(key=lambda x: x[1], reverse=True)
+        
+        # Get the most recent link
+        latest_link = dated_links[0][0]
+        latest_date = dated_links[0][1]
+        
+        print(f"Latest PDF found: {latest_link}")
+        print(f"Date extracted: {latest_date.strftime('%B %d, %Y')}")
+        
         if not latest_link.startswith("http"):
             latest_link = BASE_URL + latest_link
         
@@ -80,7 +134,7 @@ def download_latest_mygov():
             return filepath
         
         print(f"Downloading: {latest_link}")
-        r = requests.get(latest_link)
+        r = requests.get(latest_link, verify=False)
         r.raise_for_status()
         
         with open(filepath, 'wb') as f:
