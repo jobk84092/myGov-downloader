@@ -3,7 +3,7 @@ name: MyGov PDF Downloader
 on:
   schedule:
     # Runs every Monday at 9 AM UTC (adjust timezone as needed)
-    - cron: '0 9 * * 2'  
+    - cron: '0 6 * * 2'  # Tuesday at 6 AM UTC (9 AM Kenyan time)
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
