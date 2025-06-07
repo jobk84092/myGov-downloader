@@ -1,0 +1,26 @@
+name: Download Latest MyGov Newspaper
+
+on:
+  schedule:
+    - cron: '0 6 * * 2' # Every Tuesday at 6am UTC (9am EAT)
+  workflow_dispatch:
+
+jobs:
+  download-latest-mygov:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 python-dateutil
+      - name: Download latest MyGov issue
+        run: python gha_mygov_downloader.py
+      - name: Upload MyGov PDF as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mygov-latest
+          path: '*.pdf'

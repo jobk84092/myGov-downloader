@@ -1,0 +1,141 @@
+2025-06-07 16:30:16,675 - INFO - Scraping: https://gaa.go.ke/index.php/mygov-newspaper-2022
+2025-06-07 16:30:17,965 - WARNING - Failed to fetch https://gaa.go.ke/index.php/mygov-newspaper-2022: 404
+2025-06-07 16:30:19,968 - INFO - Scraping: https://gaa.go.ke/index.php/mygov-newspaper-2023
+2025-06-07 16:30:20,195 - WARNING - Failed to fetch https://gaa.go.ke/index.php/mygov-newspaper-2023: 404
+2025-06-07 16:30:22,201 - INFO - Scraping: https://gaa.go.ke/index.php/mygov-newspaper-2024
+2025-06-07 16:30:22,411 - WARNING - Failed to fetch https://gaa.go.ke/index.php/mygov-newspaper-2024: 404
+2025-06-07 16:30:24,417 - INFO - Scraping: https://gaa.go.ke/index.php/mygov-newspaper-2025
+2025-06-07 16:30:26,770 - INFO - Scraping: https://www.mygov.go.ke/mygov-newspaper-2022
+2025-06-07 16:30:27,034 - WARNING - Failed to fetch https://www.mygov.go.ke/mygov-newspaper-2022: 404
+2025-06-07 16:30:29,038 - INFO - Scraping: https://www.mygov.go.ke/mygov-newspaper-2023
+2025-06-07 16:30:29,255 - WARNING - Failed to fetch https://www.mygov.go.ke/mygov-newspaper-2023: 404
+2025-06-07 16:30:31,261 - INFO - Scraping: https://www.mygov.go.ke/mygov-newspaper-2024
+2025-06-07 16:30:31,488 - WARNING - Failed to fetch https://www.mygov.go.ke/mygov-newspaper-2024: 404
+2025-06-07 16:30:33,493 - INFO - Scraping: https://www.mygov.go.ke/mygov-newspaper-2025
+2025-06-07 16:30:35,660 - INFO - Scraping: https://ict.go.ke/mygov-issues
+2025-06-07 16:30:37,859 - INFO - Missing issues: 144
+2025-06-07 16:30:37,859 - WARNING - No link found for MyGov April 01, 2025.pdf
+2025-06-07 16:30:37,860 - WARNING - No link found for MyGov April 02, 2024.pdf
+2025-06-07 16:30:37,860 - WARNING - No link found for MyGov April 04, 2023.pdf
+2025-06-07 16:30:37,860 - WARNING - No link found for MyGov April 08, 2025.pdf
+2025-06-07 16:30:37,860 - WARNING - No link found for MyGov April 09, 2024.pdf
+2025-06-07 16:30:37,860 - WARNING - No link found for MyGov April 11, 2023.pdf
+2025-06-07 16:30:37,860 - INFO - Downloading https://www.mygov.go.ke/sites/default/files/2025-04/MyGov%20April%2015%2C%202025.pdf ...
+2025-06-07 16:30:43,001 - INFO - Saved to downloads/MyGov April 15, 2025.pdf
+2025-06-07 16:30:45,005 - WARNING - No link found for MyGov April 16, 2024.pdf
+2025-06-07 16:30:45,005 - WARNING - No link found for MyGov April 18, 2023.pdf
+2025-06-07 16:30:45,005 - INFO - Downloading https://www.mygov.go.ke/sites/default/files/2025-04/MyGov%20April%2022%2C%202025.pdf ...
+2025-06-07 16:30:46,856 - INFO - Saved to downloads/MyGov April 22, 2025.pdf
+2025-06-07 16:30:48,861 - WARNING - No link found for MyGov April 23, 2024.pdf
+2025-06-07 16:30:48,862 - WARNING - No link found for MyGov April 25, 2023.pdf
+2025-06-07 16:30:48,862 - INFO - Downloading https://www.mygov.go.ke/sites/default/files/2025-04/MyGov%20April%2029%2C%202025.pdf ...
+2025-06-07 16:30:52,418 - INFO - Saved to downloads/MyGov April 29, 2025.pdf
+2025-06-07 16:30:54,424 - WARNING - No link found for MyGov April 30, 2024.pdf
+2025-06-07 16:30:54,424 - WARNING - No link found for MyGov August 01, 2023.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov August 06, 2024.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov August 08, 2023.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov August 13, 2024.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov August 15, 2023.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov August 20, 2024.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov August 22, 2023.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov August 27, 2024.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov August 29, 2023.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 03, 2024.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 05, 2023.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 06, 2022.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 10, 2024.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 12, 2023.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 13, 2022.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 17, 2024.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 19, 2023.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 20, 2022.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 24, 2024.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 26, 2023.pdf
+2025-06-07 16:30:54,425 - WARNING - No link found for MyGov December 27, 2022.pdf
+2025-06-07 16:30:54,426 - WARNING - No link found for MyGov December 31, 2024.pdf
+2025-06-07 16:30:54,426 - WARNING - No link found for MyGov February 04, 2025.pdf
+2025-06-07 16:30:54,426 - WARNING - No link found for MyGov February 06, 2024.pdf
+2025-06-07 16:30:54,426 - WARNING - No link found for MyGov February 07, 2023.pdf
+2025-06-07 16:30:54,426 - INFO - Downloading https://www.mygov.go.ke/sites/default/files/2025-02/MyGov%20February%2011%2C%202025.pdf ...
+2025-06-07 16:31:01,859 - INFO - Saved to downloads/MyGov February 11, 2025.pdf
+2025-06-07 16:31:03,867 - WARNING - No link found for MyGov February 13, 2024.pdf
+2025-06-07 16:31:03,867 - WARNING - No link found for MyGov February 14, 2023.pdf
+2025-06-07 16:31:03,867 - WARNING - No link found for MyGov February 18, 2025.pdf
+2025-06-07 16:31:03,867 - WARNING - No link found for MyGov February 20, 2024.pdf
+2025-06-07 16:31:03,867 - WARNING - No link found for MyGov February 21, 2023.pdf
+2025-06-07 16:31:03,867 - INFO - Downloading https://www.mygov.go.ke/sites/default/files/2025-02/MyGov%20February%2025%2C%202025.pdf ...
+2025-06-07 16:31:08,063 - INFO - Saved to downloads/MyGov February 25, 2025.pdf
+2025-06-07 16:31:10,071 - WARNING - No link found for MyGov February 27, 2024.pdf
+2025-06-07 16:31:10,071 - WARNING - No link found for MyGov February 28, 2023.pdf
+2025-06-07 16:31:10,071 - WARNING - No link found for MyGov January 02, 2024.pdf
+2025-06-07 16:31:10,071 - WARNING - No link found for MyGov January 03, 2023.pdf
+2025-06-07 16:31:10,071 - WARNING - No link found for MyGov January 07, 2025.pdf
+2025-06-07 16:31:10,071 - WARNING - No link found for MyGov January 09, 2024.pdf
+2025-06-07 16:31:10,071 - WARNING - No link found for MyGov January 10, 2023.pdf
+2025-06-07 16:31:10,071 - INFO - Downloading https://www.mygov.go.ke/sites/default/files/2025-01/MyGov%20January%2014%2C%202025.pdf ...
+2025-06-07 16:31:12,965 - INFO - Saved to downloads/MyGov January 14, 2025.pdf
+2025-06-07 16:31:14,973 - WARNING - No link found for MyGov January 16, 2024.pdf
+2025-06-07 16:31:14,973 - WARNING - No link found for MyGov January 17, 2023.pdf
+2025-06-07 16:31:14,974 - INFO - Downloading https://www.mygov.go.ke/sites/default/files/2025-01/MyGov%20January%2021%2C%202025.pdf ...
+2025-06-07 16:31:17,682 - INFO - Saved to downloads/MyGov January 21, 2025.pdf
+2025-06-07 16:31:19,689 - WARNING - No link found for MyGov January 23, 2024.pdf
+2025-06-07 16:31:19,689 - WARNING - No link found for MyGov January 24, 2023.pdf
+2025-06-07 16:31:19,690 - INFO - Downloading https://www.mygov.go.ke/sites/default/files/2025-01/MyGov%20January%2028%2C%202025.pdf ...
+2025-06-07 16:31:22,730 - INFO - Saved to downloads/MyGov January 28, 2025.pdf
+2025-06-07 16:31:24,734 - WARNING - No link found for MyGov January 30, 2024.pdf
+2025-06-07 16:31:24,734 - WARNING - No link found for MyGov January 31, 2023.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov July 02, 2024.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov July 04, 2023.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov July 09, 2024.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov July 11, 2023.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov July 16, 2024.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov July 18, 2023.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov July 23, 2024.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov July 25, 2023.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov July 30, 2024.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov June 03, 2025.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov June 04, 2024.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov June 06, 2023.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov June 11, 2024.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov June 13, 2023.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov June 18, 2024.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov June 20, 2023.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov June 25, 2024.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov June 27, 2023.pdf
+2025-06-07 16:31:24,735 - WARNING - No link found for MyGov March 04, 2025.pdf
+2025-06-07 16:31:24,736 - WARNING - No link found for MyGov March 05, 2024.pdf
+2025-06-07 16:31:24,736 - WARNING - No link found for MyGov March 07, 2023.pdf
+2025-06-07 16:31:24,736 - INFO - Downloading https://www.mygov.go.ke/sites/default/files/2025-03/MyGov%20March%2011%2C%202025.pdf ...
+2025-06-07 16:31:26,765 - INFO - Saved to downloads/MyGov March 11, 2025.pdf
+2025-06-07 16:31:28,768 - WARNING - No link found for MyGov March 12, 2024.pdf
+2025-06-07 16:31:28,769 - WARNING - No link found for MyGov March 14, 2023.pdf
+2025-06-07 16:31:28,769 - INFO - Downloading https://www.mygov.go.ke/sites/default/files/2025-03/MyGov%20March%2018%2C%202025.pdf ...
+2025-06-07 16:33:32,292 - INFO - Scraping: https://gaa.go.ke/index.php/mygov-newspaper-2024
+2025-06-07 16:33:32,430 - INFO - Scraping: https://www.mygov.go.ke/mygov-newspaper-2024
+2025-06-07 16:33:32,538 - INFO - Scraping: https://ict.go.ke/mygov-issues
+2025-06-07 16:33:32,717 - INFO - Downloading https://ict.go.ke/sites/default/files/2024-09/MyGov%20Julai%2023%2C%202024.pdf ...
+2025-06-07 16:33:33,659 - INFO - Saved to myGov Sept 2022-June 2025/MyGov Julai 23, 2024.pdf
+2025-06-07 16:33:33,881 - INFO - Desktop notification sent.
+2025-06-07 16:35:00,936 - INFO - Scraping: https://gaa.go.ke/index.php/mygov-newspaper-2024
+2025-06-07 16:35:01,051 - INFO - Scraping: https://www.mygov.go.ke/mygov-newspaper-2024
+2025-06-07 16:35:01,167 - INFO - Scraping: https://ict.go.ke/mygov-issues
+2025-06-07 16:35:01,315 - INFO - Downloading https://ict.go.ke/sites/default/files/2024-09/MyGov%209th%20May%202023.pdf ...
+2025-06-07 16:35:09,180 - INFO - Saved to myGov Sept 2022-June 2025/MyGov 9th May 2023.pdf
+2025-06-07 16:35:09,387 - INFO - Desktop notification sent.
+2025-06-07 16:42:05,674 - INFO - Scraping: https://gaa.go.ke/index.php/mygov-newspaper-2024
+2025-06-07 16:42:06,504 - INFO - Scraping: https://www.mygov.go.ke/mygov-newspaper-2024
+2025-06-07 16:42:06,617 - INFO - Scraping: https://ict.go.ke/mygov-issues
+2025-06-07 16:42:06,774 - INFO - Latest issue already downloaded: MyGov 9th May 2023.pdf
+2025-06-07 16:42:06,979 - INFO - Desktop notification sent.
+2025-06-07 16:43:20,054 - INFO - Scraping: https://gaa.go.ke/index.php/mygov-newspaper-2024
+2025-06-07 16:43:23,495 - INFO - Scraping: https://www.mygov.go.ke/mygov-newspaper-2024
+2025-06-07 16:43:27,408 - INFO - Scraping: https://ict.go.ke/mygov-issues
+2025-06-07 16:43:31,126 - INFO - Downloading https://ict.go.ke/sites/default/files/2025-06/MyGov%203rd%20June%202025.pdf ...
+2025-06-07 16:43:53,524 - INFO - Saved to myGov Sept 2022-June 2025/MyGov 3rd June 2025.pdf
+2025-06-07 16:43:53,810 - INFO - Desktop notification sent.
+2025-06-07 16:43:53,810 - ERROR - GMAIL_USER or GMAIL_APP_PASSWORD environment variable not set.
+2025-06-07 16:46:47,046 - INFO - Scraping: https://gaa.go.ke/index.php/mygov-newspaper-2024
+2025-06-07 16:46:47,172 - INFO - Scraping: https://www.mygov.go.ke/mygov-newspaper-2024
+2025-06-07 16:46:47,284 - INFO - Scraping: https://ict.go.ke/mygov-issues
+2025-06-07 16:46:47,435 - INFO - Latest issue already downloaded: MyGov 3rd June 2025.pdf
+2025-06-07 16:46:47,621 - INFO - Desktop notification sent.
