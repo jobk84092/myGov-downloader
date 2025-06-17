@@ -14,7 +14,9 @@ logging.basicConfig(
 
 ARCHIVE_URLS = [
     "https://gaa.go.ke/index.php/mygov-newspaper-2024",
+    "https://gaa.go.ke/index.php/mygov-newspaper-2025",
     "https://www.mygov.go.ke/mygov-newspaper-2024",
+    "https://www.mygov.go.ke/mygov-newspaper-2025",
     "https://ict.go.ke/mygov-issues",
 ]
 SWAHILI_MONTHS = [
