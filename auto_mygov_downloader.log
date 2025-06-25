@@ -139,3 +139,10 @@
 2025-06-07 16:46:47,284 - INFO - Scraping: https://ict.go.ke/mygov-issues
 2025-06-07 16:46:47,435 - INFO - Latest issue already downloaded: MyGov 3rd June 2025.pdf
 2025-06-07 16:46:47,621 - INFO - Desktop notification sent.
+2025-06-24 09:00:03,205 - INFO - Scraping: https://gaa.go.ke/index.php/mygov-newspaper-2024
+2025-06-24 09:00:04,858 - INFO - Scraping: https://www.mygov.go.ke/mygov-newspaper-2024
+2025-06-24 09:00:05,744 - INFO - Scraping: https://ict.go.ke/mygov-issues
+2025-06-24 09:00:06,591 - INFO - Downloading https://ict.go.ke/sites/default/files/2025-06/MyGov%2010th%20June%202025.pdf ...
+2025-06-24 09:00:08,678 - INFO - Saved to myGov Sept 2022-June 2025/MyGov 10th June 2025.pdf
+2025-06-24 09:00:08,833 - INFO - Desktop notification sent.
+2025-06-24 09:00:08,834 - ERROR - GMAIL_USER or GMAIL_APP_PASSWORD environment variable not set.
