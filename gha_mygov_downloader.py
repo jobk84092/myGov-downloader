@@ -2,6 +2,7 @@ import os
 import logging
 import requests
 import re
+import time
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, unquote
 from datetime import datetime
@@ -13,11 +14,11 @@ logging.basicConfig(
 )
 
 ARCHIVE_URLS = [
-    "https://gaa.go.ke/index.php/mygov-newspaper-2024",
-    "https://gaa.go.ke/index.php/mygov-newspaper-2025",
-    "https://www.mygov.go.ke/mygov-newspaper-2024",
     "https://www.mygov.go.ke/mygov-newspaper-2025",
+    "https://www.mygov.go.ke/mygov-newspaper-2024",
     "https://ict.go.ke/mygov-issues",
+    "https://gaa.go.ke/index.php/mygov-newspaper-2025",
+    "https://gaa.go.ke/index.php/mygov-newspaper-2024"
 ]
 SWAHILI_MONTHS = [
     "Januari", "Februari", "Machi", "Aprili", "Mei", "Juni", "Julai", "Agosti", "Septemba", "Oktoba", "Novemba", "Desemba"
@@ -25,6 +26,9 @@ SWAHILI_MONTHS = [
 ENGLISH_MONTHS = [
     "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
 ]
+
+RETRIES = 3
+TIMEOUT = 10
 
 def is_english_issue(filename):
     return not any(month.lower() in filename.lower() for month in SWAHILI_MONTHS)
@@ -52,28 +56,34 @@ def find_latest_pdf():
     latest = None
     latest_date = None
     for archive_url in ARCHIVE_URLS:
-        try:
-            logging.info(f"Scraping: {archive_url}")
-            resp = requests.get(archive_url, timeout=30, verify=False)
-            if resp.status_code != 200:
-                continue
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            pdf_links = []
-            for a in soup.find_all('a', href=True):
-                href = a['href']
-                if href.lower().endswith('.pdf') and 'mygov' in href.lower():
-                    fname = filename_from_url(href)
-                    if is_english_issue(fname) and any(month in fname for month in ENGLISH_MONTHS):
-                        file_date = extract_date_from_filename(fname)
-                        if file_date:
-                            pdf_links.append((file_date, fname, urljoin(archive_url, href)))
-            if pdf_links:
-                pdf_links.sort(reverse=True)
-                if not latest_date or pdf_links[0][0] > latest_date:
-                    latest_date, latest_fname, latest_url = pdf_links[0]
-                    latest = (latest_fname, latest_url)
-        except Exception as e:
-            logging.error(f"Error scraping {archive_url}: {e}")
+        for attempt in range(RETRIES):
+            try:
+                logging.info(f"Scraping: {archive_url} (attempt {attempt+1})")
+                resp = requests.get(archive_url, timeout=TIMEOUT, verify=False)
+                if resp.status_code != 200:
+                    logging.warning(f"Failed to fetch {archive_url}: {resp.status_code}")
+                    break
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                pdf_links = []
+                for a in soup.find_all('a', href=True):
+                    href = a['href']
+                    if href.lower().endswith('.pdf') and 'mygov' in href.lower():
+                        fname = filename_from_url(href)
+                        if is_english_issue(fname) and any(month in fname for month in ENGLISH_MONTHS):
+                            file_date = extract_date_from_filename(fname)
+                            if file_date:
+                                pdf_links.append((file_date, fname, urljoin(archive_url, href)))
+                if pdf_links:
+                    pdf_links.sort(reverse=True)
+                    if not latest_date or pdf_links[0][0] > latest_date:
+                        latest_date, latest_fname, latest_url = pdf_links[0]
+                        latest = (latest_fname, latest_url)
+                    break  # Success, don't retry this URL
+                else:
+                    logging.warning(f"No PDF links found at {archive_url} (attempt {attempt+1})")
+            except Exception as e:
+                logging.error(f"Error scraping {archive_url} (attempt {attempt+1}): {e}")
+                time.sleep(2)
     if latest:
         return latest
     return None, None
