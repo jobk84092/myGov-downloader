@@ -5,7 +5,7 @@ import re
 import time
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, unquote
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import parser as date_parser
 
 logging.basicConfig(
@@ -14,11 +14,7 @@ logging.basicConfig(
 )
 
 ARCHIVE_URLS = [
-    "https://www.mygov.go.ke/mygov-newspaper-2025",
-    "https://www.mygov.go.ke/mygov-newspaper-2024",
-    "https://ict.go.ke/mygov-issues",
-    "https://gaa.go.ke/index.php/mygov-newspaper-2025",
-    "https://gaa.go.ke/index.php/mygov-newspaper-2024"
+    "https://www.mygov.go.ke/mygov-newspaper-2025"
 ]
 SWAHILI_MONTHS = [
     "Januari", "Februari", "Machi", "Aprili", "Mei", "Juni", "Julai", "Agosti", "Septemba", "Oktoba", "Novemba", "Desemba"
@@ -84,6 +80,30 @@ def find_latest_pdf():
             except Exception as e:
                 logging.error(f"Error scraping {archive_url} (attempt {attempt+1}): {e}")
                 time.sleep(2)
+    # Fallback: try to guess the direct PDF link for today (Tuesday) or the most recent Tuesday
+    if not latest:
+        today = datetime.today()
+        # Find the most recent Tuesday (weekday=1)
+        days_ago = (today.weekday() - 1) % 7
+        last_tuesday = today if today.weekday() == 1 else today - timedelta(days=days_ago)
+        fallback_month = last_tuesday.strftime('%B')
+        fallback_day = last_tuesday.day
+        fallback_year = last_tuesday.year
+        fallback_fname = f"MyGov {fallback_day} {fallback_month} {fallback_year}.pdf"
+        # Try all base URLs for a direct PDF link
+        for base_url in [
+            "https://www.mygov.go.ke/sites/default/files/",
+            "https://gaa.go.ke/sites/default/files/",
+            "https://ict.go.ke/sites/default/files/"
+        ]:
+            fallback_url = f"{base_url}{last_tuesday.strftime('%Y-%m')}/MyGov%20{fallback_day}%20{fallback_month}%20{fallback_year}.pdf"
+            try:
+                logging.info(f"Trying fallback direct PDF: {fallback_url}")
+                resp = requests.get(fallback_url, timeout=TIMEOUT, verify=False)
+                if resp.status_code == 200 and 'pdf' in resp.headers.get('Content-Type', '').lower():
+                    return fallback_fname, fallback_url
+            except Exception as e:
+                logging.error(f"Error trying fallback direct PDF: {e}")
     if latest:
         return latest
     return None, None
