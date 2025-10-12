@@ -1,2 +1,4 @@
 scraper.log
 scraper.log
+__pycache__/
+*.pyc
