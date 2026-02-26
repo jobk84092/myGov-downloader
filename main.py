@@ -29,6 +29,7 @@ SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 ARCHIVE_URLS = [
     "https://www.mygov.go.ke/mygov-newspaper-{year}",
+    "https://mygov.go.ke/index.php/mygove-issue-{year}",
     "https://gaa.go.ke/index.php/mygov-newspaper-{year}",
     "https://ict.go.ke/mygov-issues",
 ]
