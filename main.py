@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 BASE_URL = "https://ict.go.ke"
 KEYWORD = "MyGov"
 TARGET_DIR = "downloads"
-DRIVE_FOLDER_ID = "1bu5FMiNkc1B4RKYIKM9PZTsIKgPUCaN1"
+DRIVE_FOLDER_ID = "19fu-mfAfTPBvXdjPVKdMdgOCq4neCDqy"
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 def extract_date_from_url(url):
