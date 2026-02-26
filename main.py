@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 # ---- CONFIG ----
 TARGET_DIR = "downloads"
-DRIVE_FOLDER_ID = "1bu5FMiNkc1B4RKYIKM9PZTsIKgPUCaN1"
+DRIVE_FOLDER_ID = "19fu-mfAfTPBvXdjPVKdMdgOCq4neCDqy"
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 ARCHIVE_URLS = [
