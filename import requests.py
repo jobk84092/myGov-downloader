@@ -1,3 +1,17 @@
+"""
+MyGov Newspaper Downloader Script
+
+This script downloads MyGov newspaper PDF issues from the Government Advertising Agency (GAA) website.
+
+Main Features:
+1. Download all Tuesday issues between a date range (historical download)
+2. Download specific missing issues from a hardcoded list (August-October 2025)
+3. List all downloaded MyGov files
+
+The script uses the download_pdf(date) function which constructs URLs based on the date
+and downloads PDFs to the 'downloads' directory.
+"""
+
 import os
 import requests
 from datetime import datetime, timedelta
@@ -35,12 +49,6 @@ def download_pdf(date):
     except Exception as e:
         print(f"Error downloading {date.strftime('%B %d, %Y')}: {e}")
 
-if __name__ == "__main__":
-    start_date = datetime(2022, 9, 6)  # First Tuesday in Sept 2022
-    end_date = datetime(2025, 5, 27)   # Last Tuesday in May 2025
-    for issue_date in generate_tuesdays(start_date, end_date):
-        download_pdf(issue_date)
-
 # List all downloaded MyGov files
 def list_downloaded_files():
     files = [f for f in os.listdir(DOWNLOAD_DIR) if f.lower().endswith('.pdf') and 'mygov' in f.lower()]
@@ -48,5 +56,69 @@ def list_downloaded_files():
     for f in sorted(files):
         print(f)
 
+# Download missing MyGov issues from August to October 2025
+def download_missing_issues():
+    """
+    Download specific missing MyGov newspaper issues from August to October 2025.
+    
+    This function attempts to download the following missing issues:
+    - August 5, 12, 19, 26, 2025
+    - September 2, 9, 16, 23, 30, 2025
+    - October 7, 2025
+    
+    Status of each download (success/failure) is printed to console.
+    """
+    print("\n" + "="*60)
+    print("DOWNLOADING MISSING MYGOV ISSUES (AUGUST - OCTOBER 2025)")
+    print("="*60 + "\n")
+    
+    # Hardcoded list of missing issue dates
+    missing_dates = [
+        datetime(2025, 8, 5),   # August 5, 2025
+        datetime(2025, 8, 12),  # August 12, 2025
+        datetime(2025, 8, 19),  # August 19, 2025
+        datetime(2025, 8, 26),  # August 26, 2025
+        datetime(2025, 9, 2),   # September 2, 2025
+        datetime(2025, 9, 9),   # September 9, 2025
+        datetime(2025, 9, 16),  # September 16, 2025
+        datetime(2025, 9, 23),  # September 23, 2025
+        datetime(2025, 9, 30),  # September 30, 2025
+        datetime(2025, 10, 7),  # October 7, 2025
+    ]
+    
+    success_count = 0
+    failure_count = 0
+    
+    for date in missing_dates:
+        print(f"\nAttempting to download: {date.strftime('%B %d, %Y')}")
+        try:
+            download_pdf(date)
+            # Check if file was actually created
+            expected_filename = os.path.join(DOWNLOAD_DIR, f"MyGov_{date.strftime('%Y_%m_%d')}.pdf")
+            if os.path.exists(expected_filename):
+                success_count += 1
+                print(f"✓ SUCCESS: {date.strftime('%B %d, %Y')}")
+            else:
+                failure_count += 1
+                print(f"✗ FAILED: {date.strftime('%B %d, %Y')}")
+        except Exception as e:
+            failure_count += 1
+            print(f"✗ FAILED: {date.strftime('%B %d, %Y')} - {e}")
+    
+    print("\n" + "="*60)
+    print(f"DOWNLOAD SUMMARY")
+    print("="*60)
+    print(f"Total attempts: {len(missing_dates)}")
+    print(f"Successful: {success_count}")
+    print(f"Failed: {failure_count}")
+    print("="*60 + "\n")
+
 if __name__ == "__main__":
+    # Download missing issues from August to October 2025
+    download_missing_issues()
+    
+    # Optionally list all downloaded files to verify
+    print("\n" + "="*60)
+    print("LISTING ALL DOWNLOADED MYGOV FILES")
+    print("="*60 + "\n")
     list_downloaded_files()
