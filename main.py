@@ -32,6 +32,7 @@ ARCHIVE_URLS = [
     "https://mygov.go.ke/index.php/mygove-issue-{year}",
     "https://gaa.go.ke/index.php/mygov-newspaper-{year}",
     "https://ict.go.ke/mygov-issues",
+    "https://ict.go.ke/node/941",
 ]
 
 SWAHILI_MONTHS = [
