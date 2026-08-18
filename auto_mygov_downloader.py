@@ -72,8 +72,8 @@ def send_notification(title, message):
         logger.error(f"Failed to send notification: {e}")
 
 def send_email(subject, body, to_email):
-    gmail_user = os.environ.get('jobkimani@gmail.com')
-    gmail_password = os.environ.get('ttyq hukc yxyq tium')
+    gmail_user = os.environ.get('GMAIL_USER')
+    gmail_password = os.environ.get('GMAIL_APP_PASSWORD')
     if not gmail_user or not gmail_password:
         logger.error('GMAIL_USER or GMAIL_APP_PASSWORD environment variable not set.')
         return

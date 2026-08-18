@@ -2,3 +2,6 @@ scraper.log
 scraper.log
 __pycache__/
 *.pyc
+credentials.json
+token.json
+.env
