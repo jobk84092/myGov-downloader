@@ -16,7 +16,7 @@ on:
 
 concurrency:
   group: mygov-archive-sync
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -29,6 +29,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            main.py
+            test_main.py
+            requirements.txt
+            archive_manifest.json
+            .github/workflows/mygov-downloader.yml
+          sparse-checkout-cone-mode: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
