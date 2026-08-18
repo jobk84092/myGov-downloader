@@ -1,9 +1,7 @@
 name: MyGov Backfill - Upload All Newspapers to Drive
 
 on:
-  schedule:
-    - cron: '0 15 * * 2'  # Every Tuesday at 3 PM UTC (6 PM Kenyan time)
-  workflow_dispatch:  # Also allows manual trigger
+  workflow_dispatch:
 
 jobs:
   backfill-upload:

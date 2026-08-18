@@ -1,8 +1,6 @@
 name: Download Latest MyGov Newspaper
 
 on:
-  schedule:
-    - cron: '0 6 * * 2' # Every Tuesday at 6am UTC (9am EAT)
   workflow_dispatch:
 
 jobs:

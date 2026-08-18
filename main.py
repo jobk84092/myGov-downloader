@@ -1,9 +1,10 @@
 import os
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
-from urllib.parse import urljoin, unquote
+from datetime import datetime
+from urllib.parse import urljoin, unquote, urlparse
 from google.oauth2.credentials import Credentials
+from google.oauth2 import service_account
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
@@ -25,13 +26,16 @@ logger = logging.getLogger(__name__)
 # ---- CONFIG ----
 TARGET_DIR = "downloads"
 DRIVE_FOLDER_ID = "19fu-mfAfTPBvXdjPVKdMdgOCq4neCDqy"
+MANIFEST_PATH = "archive_manifest.json"
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 ARCHIVE_URLS = [
+    # This page currently exposes the most complete cross-year index.
+    "https://ict.go.ke/index.php/mygov-issues",
+    "https://www.mygov.go.ke/{year}-issues",
     "https://www.mygov.go.ke/mygov-newspaper-{year}",
     "https://mygov.go.ke/index.php/mygove-issue-{year}",
     "https://gaa.go.ke/index.php/mygov-newspaper-{year}",
-    "https://ict.go.ke/mygov-issues",
     "https://ict.go.ke/node/941",
 ]
 
@@ -52,6 +56,8 @@ MONTH_MAP = {
 
 RETRIES = 3
 TIMEOUT = 15
+START_DATE = datetime(2022, 9, 1)
+USER_AGENT = "Mozilla/5.0 (compatible; MyGovArchiveBot/1.0)"
 
 
 def is_english_issue(filename):
@@ -59,8 +65,16 @@ def is_english_issue(filename):
 
 
 def filename_from_url(url):
-    name = unquote(url.split('/')[-1])
-    return name.replace('%20', ' ')
+    name = unquote(urlparse(url).path.split('/')[-1])
+    return re.sub(r"_\d+(?=\.pdf$)", "", name, flags=re.IGNORECASE)
+
+
+def canonical_pdf_url(archive_url, href):
+    """Build a usable PDF URL, repairing bad /index.php/sites links."""
+    full_url = urljoin(archive_url, href)
+    parsed = urlparse(full_url)
+    path = parsed.path.replace('/index.php/sites/default/files/', '/sites/default/files/')
+    return parsed._replace(path=path).geturl()
 
 
 def parse_date_from_filename(filename):
@@ -105,49 +119,65 @@ def is_actual_newspaper(filename):
     return True
 
 
-def find_latest_pdf():
-    """Scrape multiple sources to find the latest English MyGov newspaper PDF."""
-    now = datetime.now()
-    years = [now.year, now.year - 1]
+def issue_is_in_scope(file_date):
+    return START_DATE.date() <= file_date.date() <= datetime.now().date()
 
+
+def scrape_archive_links(backfill=False):
+    """Return English MyGov issues keyed by publication date."""
+    now = datetime.now()
+    years = range(START_DATE.year, now.year + 1) if backfill else [now.year, now.year - 1]
     all_links = {}
 
     for url_template in ARCHIVE_URLS:
-        urls_to_try = []
-        if '{year}' in url_template:
-            for y in years:
-                urls_to_try.append(url_template.format(year=y))
-        else:
-            urls_to_try.append(url_template)
-
+        urls_to_try = (
+            [url_template.format(year=y) for y in years]
+            if '{year}' in url_template else [url_template]
+        )
         for archive_url in urls_to_try:
             for attempt in range(RETRIES):
                 try:
-                    logger.info(f"Scraping: {archive_url} (attempt {attempt+1})")
-                    resp = requests.get(archive_url, timeout=TIMEOUT, verify=False)
+                    logger.info(f"Scraping: {archive_url} (attempt {attempt + 1})")
+                    resp = requests.get(
+                        archive_url,
+                        timeout=TIMEOUT,
+                        verify=False,
+                        headers={'User-Agent': USER_AGENT},
+                    )
                     if resp.status_code != 200:
                         logger.warning(f"HTTP {resp.status_code} for {archive_url}")
                         break
                     soup = BeautifulSoup(resp.text, 'html.parser')
-                    for a in soup.find_all('a', href=True):
-                        href = a['href']
-                        if not href.lower().endswith('.pdf'):
+                    for anchor in soup.find_all('a', href=True):
+                        href = anchor['href']
+                        if '.pdf' not in href.lower():
                             continue
-                        full_url = urljoin(archive_url, href)
+                        full_url = canonical_pdf_url(archive_url, href)
                         fname = filename_from_url(full_url)
-                        if not is_actual_newspaper(fname):
-                            continue
-                        if not is_english_issue(fname):
+                        if not is_actual_newspaper(fname) or not is_english_issue(fname):
                             continue
                         file_date = parse_date_from_filename(fname)
-                        if file_date:
-                            key = file_date.strftime('%Y-%m-%d')
-                            if key not in all_links:
-                                all_links[key] = (file_date, fname, full_url)
+                        if not file_date or not issue_is_in_scope(file_date):
+                            continue
+                        key = file_date.strftime('%Y-%m-%d')
+                        # Sources are ordered by preference; preserve the first valid URL.
+                        if key not in all_links:
+                            all_links[key] = (file_date, fname, full_url)
                     break
-                except Exception as e:
-                    logger.error(f"Error scraping {archive_url}: {e}")
-                    time.sleep(2)
+                except Exception as exc:
+                    logger.error(f"Error scraping {archive_url}: {exc}")
+                    if attempt < RETRIES - 1:
+                        time.sleep(2)
+            if backfill:
+                time.sleep(0.25)
+
+    logger.info(f"Found {len(all_links)} unique English MyGov issues")
+    return all_links
+
+
+def find_latest_pdf():
+    """Scrape multiple sources to find the latest English MyGov newspaper PDF."""
+    all_links = scrape_archive_links(backfill=False)
 
     if not all_links:
         logger.warning("No MyGov newspaper PDFs found on any source.")
@@ -161,51 +191,7 @@ def find_latest_pdf():
 
 def find_all_pdfs():
     """Scrape all sources to find ALL available English MyGov newspaper PDFs."""
-    now = datetime.now()
-    years = range(2022, now.year + 1)
-
-    all_links = {}
-
-    for url_template in ARCHIVE_URLS:
-        urls_to_try = []
-        if '{year}' in url_template:
-            for y in years:
-                urls_to_try.append(url_template.format(year=y))
-        else:
-            urls_to_try.append(url_template)
-
-        for archive_url in urls_to_try:
-            for attempt in range(RETRIES):
-                try:
-                    logger.info(f"Scraping: {archive_url} (attempt {attempt+1})")
-                    resp = requests.get(archive_url, timeout=TIMEOUT, verify=False)
-                    if resp.status_code != 200:
-                        logger.warning(f"HTTP {resp.status_code} for {archive_url}")
-                        break
-                    soup = BeautifulSoup(resp.text, 'html.parser')
-                    for a in soup.find_all('a', href=True):
-                        href = a['href']
-                        if not href.lower().endswith('.pdf'):
-                            continue
-                        full_url = urljoin(archive_url, href)
-                        fname = filename_from_url(full_url)
-                        if not is_actual_newspaper(fname):
-                            continue
-                        if not is_english_issue(fname):
-                            continue
-                        file_date = parse_date_from_filename(fname)
-                        if file_date:
-                            key = file_date.strftime('%Y-%m-%d')
-                            if key not in all_links:
-                                all_links[key] = (file_date, fname, full_url)
-                    break
-                except Exception as e:
-                    logger.error(f"Error scraping {archive_url}: {e}")
-                    time.sleep(2)
-            time.sleep(1)
-
-    logger.info(f"Found {len(all_links)} unique English MyGov newspaper PDFs across all sources")
-    return all_links
+    return scrape_archive_links(backfill=True)
 
 
 def download_pdf(url, filename):
@@ -219,7 +205,13 @@ def download_pdf(url, filename):
 
     try:
         logger.info(f"Downloading: {url}")
-        resp = requests.get(url, stream=True, timeout=30, verify=False)
+        resp = requests.get(
+            url,
+            stream=True,
+            timeout=60,
+            verify=False,
+            headers={'User-Agent': USER_AGENT},
+        )
         if resp.status_code != 200:
             logger.error(f"HTTP {resp.status_code} downloading {url}")
             return None
@@ -246,6 +238,15 @@ def authenticate_google_drive():
             logger.info("Loading credentials from GOOGLE_TOKEN environment variable")
             token_data = json.loads(os.getenv('GOOGLE_TOKEN'))
             creds = Credentials.from_authorized_user_info(token_data, SCOPES)
+        elif os.getenv('GOOGLE_CREDENTIALS'):
+            credential_data = json.loads(os.getenv('GOOGLE_CREDENTIALS'))
+            if credential_data.get('type') != 'service_account':
+                raise RuntimeError(
+                    "GOOGLE_CREDENTIALS must contain service-account JSON for headless runs"
+                )
+            creds = service_account.Credentials.from_service_account_info(
+                credential_data, scopes=SCOPES
+            )
         elif os.path.exists('token.json'):
             logger.info("Loading credentials from token.json")
             creds = Credentials.from_authorized_user_file('token.json', SCOPES)
@@ -308,6 +309,43 @@ def upload_to_drive(service, filepath):
         raise
 
 
+def list_drive_filenames(service):
+    """List existing files once so backfill skips downloads already in Drive."""
+    names = set()
+    page_token = None
+    while True:
+        result = service.files().list(
+            q=f"'{DRIVE_FOLDER_ID}' in parents and trashed=false",
+            fields="nextPageToken, files(name)",
+            pageSize=1000,
+            pageToken=page_token,
+        ).execute()
+        names.update(item['name'] for item in result.get('files', []))
+        page_token = result.get('nextPageToken')
+        if not page_token:
+            return names
+
+
+def load_manifest_filenames():
+    """Load the durable archive inventory tracked with the repository."""
+    if not os.path.exists(MANIFEST_PATH):
+        return set()
+    with open(MANIFEST_PATH, encoding='utf-8') as manifest_file:
+        payload = json.load(manifest_file)
+    return set(payload.get('files', []))
+
+
+def save_manifest_filenames(filenames):
+    """Persist canonical PDF names after successful uploads."""
+    payload = {
+        'updated_at': datetime.now().isoformat(timespec='seconds'),
+        'files': sorted(name for name in filenames if name.lower().endswith('.pdf')),
+    }
+    with open(MANIFEST_PATH, 'w', encoding='utf-8') as manifest_file:
+        json.dump(payload, manifest_file, indent=2)
+        manifest_file.write('\n')
+
+
 def main():
     """Download the latest MyGov PDF and upload to Google Drive."""
     logger.info("Starting MyGov PDF download and upload process...")
@@ -346,6 +384,7 @@ def backfill():
         return
 
     drive_service = authenticate_google_drive()
+    existing_names = list_drive_filenames(drive_service) | load_manifest_filenames()
 
     uploaded = 0
     skipped = 0
@@ -355,6 +394,11 @@ def backfill():
         file_date, fname, url = all_links[key]
         std_name = f"MyGov {file_date.strftime('%B %d, %Y')}.pdf"
 
+        if std_name in existing_names:
+            logger.info(f"Already in Drive: {std_name}")
+            skipped += 1
+            continue
+
         filepath = download_pdf(url, std_name)
         if not filepath:
             failed += 1
@@ -363,6 +407,7 @@ def backfill():
         try:
             upload_to_drive(drive_service, filepath)
             uploaded += 1
+            existing_names.add(std_name)
         except Exception as e:
             logger.error(f"Failed to upload {std_name}: {e}")
             failed += 1
@@ -370,6 +415,10 @@ def backfill():
         time.sleep(1)
 
     logger.info(f"Backfill complete: {uploaded} uploaded, {skipped} skipped, {failed} failed")
+    if uploaded:
+        save_manifest_filenames(existing_names)
+    if failed:
+        raise RuntimeError(f"Backfill completed with {failed} failed issue(s)")
 
 
 if __name__ == '__main__':
