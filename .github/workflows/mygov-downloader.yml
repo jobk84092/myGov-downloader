@@ -37,6 +37,7 @@ jobs:
             test_main.py
             requirements.txt
             archive_manifest.json
+            source_discovery.json
             .github/workflows/mygov-downloader.yml
           sparse-checkout-cone-mode: false
 
@@ -68,11 +69,12 @@ jobs:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: python main.py --backfill
 
-      - name: Commit updated archive manifest
+      - name: Commit updated archive and source discovery state
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add archive_manifest.json
+          git add archive_manifest.json source_discovery.json
           if ! git diff --cached --quiet; then
             git commit -m "Update MyGov archive manifest"
             git push
