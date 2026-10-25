@@ -330,6 +330,7 @@ def search_for_new_archive_urls(all_links):
         date_label = f"{issue_date.strftime('%B')} {issue_date.day}, {issue_date.year}"
         queries.append(f'MyGov Kenya newspaper "{date_label}" PDF')
     queries.append(f"MyGov Kenya newspaper {today.year} latest PDF")
+    pending_target_dates = set(target_dates)
 
     discovered_links = {}
     discovered_archive_urls = set()
@@ -360,6 +361,7 @@ def search_for_new_archive_urls(all_links):
                 if record_issue_pdf(discovered_links, candidate_url) and candidate_date:
                     issue_key = candidate_date.strftime("%Y-%m-%d")
                     discovered_pdf_urls[issue_key] = candidate_url
+                    pending_target_dates.discard(candidate_date.date())
                 continue
 
             try:
@@ -385,6 +387,7 @@ def search_for_new_archive_urls(all_links):
                         issue_date = parse_date_from_filename(filename)
                         if issue_date:
                             discovered_pdf_urls[issue_date.strftime("%Y-%m-%d")] = pdf_url
+                            pending_target_dates.discard(issue_date.date())
                         page_has_issue = True
 
                 if page_has_issue:
@@ -392,11 +395,9 @@ def search_for_new_archive_urls(all_links):
             except Exception as exc:
                 logger.warning(f"Could not inspect search result {candidate_url}: {exc}")
 
-        combined_links = dict(all_links)
-        combined_links.update(discovered_links)
-        if is_archive_fresh(combined_links):
-            break
-        if candidate_count > 20:
+            if not pending_target_dates:
+                break
+        if not pending_target_dates or candidate_count > 20:
             break
         time.sleep(1)
 
