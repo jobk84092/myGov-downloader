@@ -1,7 +1,7 @@
 import os
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urljoin, unquote, urlparse
 from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 TARGET_DIR = "downloads"
 DRIVE_FOLDER_ID = "19fu-mfAfTPBvXdjPVKdMdgOCq4neCDqy"
 MANIFEST_PATH = "archive_manifest.json"
+SOURCE_DISCOVERY_PATH = "source_discovery.json"
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 ARCHIVE_URLS = [
@@ -125,13 +126,103 @@ def issue_is_in_scope(file_date):
     return START_DATE.date() <= file_date.date() <= datetime.now().date()
 
 
+def is_trusted_archive_url(url):
+    """Accept search results only from official MyGov government domains."""
+    parsed = urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+    trusted_domains = (
+        "gaa.go.ke",
+        "ict.go.ke",
+        "mygov.go.ke",
+        "kenyayearbook.go.ke",
+    )
+    return parsed.scheme in {"http", "https"} and any(
+        hostname == domain or hostname.endswith(f".{domain}")
+        for domain in trusted_domains
+    )
+
+
+def load_source_discovery():
+    """Load previously verified archive pages and issue PDF URLs."""
+    empty_state = {"archive_urls": [], "pdf_urls": {}}
+    if not os.path.exists(SOURCE_DISCOVERY_PATH):
+        return empty_state
+
+    try:
+        with open(SOURCE_DISCOVERY_PATH, encoding="utf-8") as state_file:
+            payload = json.load(state_file)
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning(f"Could not read source discovery cache: {exc}")
+        return empty_state
+
+    if not isinstance(payload, dict):
+        logger.warning("Source discovery cache must contain a JSON object")
+        return empty_state
+
+    raw_archive_urls = payload.get("archive_urls", [])
+    raw_pdf_urls = payload.get("pdf_urls", {})
+    if not isinstance(raw_archive_urls, list):
+        raw_archive_urls = []
+    if not isinstance(raw_pdf_urls, dict):
+        raw_pdf_urls = {}
+
+    archive_urls = sorted({
+        url for url in raw_archive_urls
+        if isinstance(url, str) and is_trusted_archive_url(url)
+    })
+    pdf_urls = {
+        date_key: url
+        for date_key, url in raw_pdf_urls.items()
+        if isinstance(date_key, str)
+        and isinstance(url, str)
+        and is_trusted_archive_url(url)
+    }
+    return {"archive_urls": archive_urls, "pdf_urls": pdf_urls}
+
+
+def save_source_discovery(state):
+    """Persist trusted URLs found through search for future archive scans."""
+    payload = {
+        "updated_at": datetime.now().isoformat(timespec="seconds"),
+        "archive_urls": sorted(set(state.get("archive_urls", []))),
+        "pdf_urls": dict(sorted(state.get("pdf_urls", {}).items())),
+    }
+    with open(SOURCE_DISCOVERY_PATH, "w", encoding="utf-8") as state_file:
+        json.dump(payload, state_file, indent=2)
+        state_file.write("\n")
+
+
+def record_issue_pdf(all_links, pdf_url):
+    """Add a dated MyGov PDF only when its host and filename pass validation."""
+    if not is_trusted_archive_url(pdf_url):
+        return False
+
+    filename = filename_from_url(pdf_url)
+    if not is_actual_newspaper(filename) or not is_english_issue(filename):
+        return False
+
+    file_date = parse_date_from_filename(filename)
+    if not file_date or not issue_is_in_scope(file_date):
+        return False
+
+    key = file_date.strftime("%Y-%m-%d")
+    current = all_links.get(key)
+    if current is None or file_date > current[0]:
+        all_links[key] = (file_date, filename, pdf_url)
+    return True
+
+
 def scrape_archive_links(backfill=False):
     """Return English MyGov issues keyed by publication date."""
     now = datetime.now()
     years = range(START_DATE.year, now.year + 1) if backfill else [now.year, now.year - 1]
     all_links = {}
+    discovery = load_source_discovery()
+    for cached_pdf_url in discovery["pdf_urls"].values():
+        record_issue_pdf(all_links, cached_pdf_url)
+    archive_url_templates = ARCHIVE_URLS + discovery["archive_urls"]
 
-    for url_template in ARCHIVE_URLS:
+    for url_template in archive_url_templates:
         urls_to_try = (
             [url_template.format(year=y) for y in years]
             if '{year}' in url_template else [url_template]
@@ -196,12 +287,145 @@ def find_all_pdfs():
     return scrape_archive_links(backfill=True)
 
 
+def latest_issue_date(all_links):
+    if not all_links:
+        return None
+    return max(file_date.date() for file_date, _, _ in all_links.values())
+
+
+def is_archive_fresh(all_links):
+    latest_date = latest_issue_date(all_links)
+    return latest_date is not None and (
+        datetime.now().date() - latest_date
+    ).days <= MAX_ISSUE_AGE_DAYS
+
+
+def search_general_internet(query):
+    """Search Google for a MyGov issue or a newly published archive page."""
+    try:
+        from googlesearch import search
+        return list(search(query, num_results=10, lang="en", sleep_interval=2))
+    except Exception as exc:
+        logger.warning(f"General web search failed for {query!r}: {exc}")
+        return []
+
+
+def search_for_new_archive_urls(all_links):
+    """Use Google only when known sources are stale; cache verified .go.ke URLs."""
+    latest_date = latest_issue_date(all_links)
+    today = datetime.now().date()
+    days_since_tuesday = (today.weekday() - 1) % 7
+    latest_tuesday = today - timedelta(days=days_since_tuesday)
+
+    target_dates = []
+    for weeks_back in range(12):
+        candidate_date = latest_tuesday - timedelta(weeks=weeks_back)
+        if latest_date is None or candidate_date > latest_date:
+            target_dates.append(candidate_date)
+        if len(target_dates) >= 4:
+            break
+
+    queries = []
+    for issue_date in target_dates:
+        date_label = f"{issue_date.strftime('%B')} {issue_date.day}, {issue_date.year}"
+        queries.append(f'MyGov Kenya newspaper "{date_label}" PDF')
+    queries.append(f"MyGov Kenya newspaper {today.year} latest PDF")
+    pending_target_dates = set(target_dates)
+
+    discovered_links = {}
+    discovered_archive_urls = set()
+    discovered_pdf_urls = {}
+    seen_results = set()
+    candidate_count = 0
+
+    for query in queries:
+        logger.info(f"Searching Google for recent MyGov sources: {query}")
+        for candidate_url in search_general_internet(query):
+            if not isinstance(candidate_url, str):
+                candidate_url = getattr(candidate_url, "url", "")
+            candidate_url = candidate_url.strip()
+            if (
+                not candidate_url
+                or candidate_url in seen_results
+                or not is_trusted_archive_url(candidate_url)
+            ):
+                continue
+            seen_results.add(candidate_url)
+            candidate_count += 1
+            if candidate_count > 20:
+                break
+
+            parsed = urlparse(candidate_url)
+            if parsed.path.lower().endswith(".pdf"):
+                candidate_date = parse_date_from_filename(filename_from_url(candidate_url))
+                if record_issue_pdf(discovered_links, candidate_url) and candidate_date:
+                    issue_key = candidate_date.strftime("%Y-%m-%d")
+                    discovered_pdf_urls[issue_key] = candidate_url
+                    pending_target_dates.discard(candidate_date.date())
+                continue
+
+            try:
+                response = requests.get(
+                    candidate_url,
+                    timeout=TIMEOUT,
+                    verify=False,
+                    headers={"User-Agent": USER_AGENT},
+                )
+                if response.status_code != 200 or not is_trusted_archive_url(response.url):
+                    continue
+
+                page_url = response.url
+                soup = BeautifulSoup(response.text, "html.parser")
+                page_has_issue = False
+                for anchor in soup.find_all("a", href=True):
+                    href = anchor["href"]
+                    if ".pdf" not in href.lower():
+                        continue
+                    pdf_url = canonical_pdf_url(page_url, href)
+                    if record_issue_pdf(discovered_links, pdf_url):
+                        filename = filename_from_url(pdf_url)
+                        issue_date = parse_date_from_filename(filename)
+                        if issue_date:
+                            discovered_pdf_urls[issue_date.strftime("%Y-%m-%d")] = pdf_url
+                            pending_target_dates.discard(issue_date.date())
+                        page_has_issue = True
+
+                if page_has_issue:
+                    discovered_archive_urls.add(page_url)
+            except Exception as exc:
+                logger.warning(f"Could not inspect search result {candidate_url}: {exc}")
+
+            if not pending_target_dates:
+                break
+        if not pending_target_dates or candidate_count > 20:
+            break
+        time.sleep(1)
+
+    if discovered_archive_urls or discovered_pdf_urls:
+        state = load_source_discovery()
+        state["archive_urls"] = sorted(
+            set(state["archive_urls"]) | discovered_archive_urls
+        )
+        state["pdf_urls"].update(discovered_pdf_urls)
+        save_source_discovery(state)
+        logger.info(
+            f"Cached {len(discovered_archive_urls)} archive page(s) and "
+            f"{len(discovered_pdf_urls)} issue PDF URL(s) from web search"
+        )
+
+    logger.info(
+        f"General web search checked {candidate_count} trusted result URL(s) "
+        f"and found {len(discovered_links)} dated issue(s)"
+    )
+    return discovered_links
+
+
 def require_recent_issue(all_links):
     """Fail a scheduled sync when archive discovery has gone stale."""
-    if not all_links:
+    latest_date = latest_issue_date(all_links)
+    if latest_date is None:
         raise RuntimeError("No MyGov PDFs found on any archive source.")
 
-    latest_date = max(file_date.date() for file_date, _, _ in all_links.values())
     age_days = (datetime.now().date() - latest_date).days
     if age_days > MAX_ISSUE_AGE_DAYS:
         raise RuntimeError(
@@ -210,7 +434,6 @@ def require_recent_issue(all_links):
         )
 
     logger.info(f"Latest issue found: {latest_date} ({age_days} days old)")
-
 
 def download_pdf(url, filename):
     """Download a PDF file."""
@@ -397,6 +620,16 @@ def backfill():
     logger.info("Starting MyGov backfill process...")
 
     all_links = find_all_pdfs()
+    if not is_archive_fresh(all_links):
+        logger.warning(
+            "Known archive sources are stale; searching the general internet "
+            "for newer MyGov issues."
+        )
+        discovered_links = search_for_new_archive_urls(all_links)
+        for issue_key, issue in discovered_links.items():
+            current_issue = all_links.get(issue_key)
+            if current_issue is None or issue[0] > current_issue[0]:
+                all_links[issue_key] = issue
     require_recent_issue(all_links)
 
     drive_service = authenticate_google_drive()

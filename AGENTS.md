@@ -10,7 +10,7 @@ Python-based MyGov Kenya Newspaper PDF downloader and archiver. Scripts scrape K
 
 | Script | Purpose | Auth required? |
 |---|---|---|
-| `main.py` | Downloads latest PDF + uploads to Google Drive. Also supports `--backfill` to upload ALL available issues. | Yes (`GOOGLE_TOKEN` env var or `token.json`) |
+| `main.py` | Downloads latest PDF + uploads to Google Drive. Also supports `--backfill` to upload ALL available issues. If known archives are stale, it searches Google for recent issue PDFs/pages on official `.go.ke` domains and caches verified URLs in `source_discovery.json`. | Yes (`GOOGLE_TOKEN` env var or `token.json`) |
 | `gha_mygov_downloader.py` | Downloads latest PDF from `mygov.go.ke` (used in GitHub Actions artifact workflow) | No |
 | `auto_mygov_downloader.py` | Auto downloader with email/macOS notifications | No (email optional) |
 | `crawl_gaa_pages.py` | Backfill crawler for GAA archive pages | No |
@@ -38,7 +38,7 @@ GitHub auto-disables scheduled workflows after 60 days of no repo activity. If w
 
 ### Dependencies
 
-Core dependencies are in `requirements.txt`. Additional packages used by secondary scripts but not listed in `requirements.txt`: `python-dateutil`, `watchdog`, `googlesearch-python`.
+Core dependencies are in `requirements.txt`. Additional packages used by secondary scripts but not listed in `requirements.txt`: `python-dateutil`, `watchdog`.
 
 ### Lint / Tests / Build
 
