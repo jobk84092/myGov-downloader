@@ -155,13 +155,24 @@ def load_source_discovery():
         logger.warning(f"Could not read source discovery cache: {exc}")
         return empty_state
 
+    if not isinstance(payload, dict):
+        logger.warning("Source discovery cache must contain a JSON object")
+        return empty_state
+
+    raw_archive_urls = payload.get("archive_urls", [])
+    raw_pdf_urls = payload.get("pdf_urls", {})
+    if not isinstance(raw_archive_urls, list):
+        raw_archive_urls = []
+    if not isinstance(raw_pdf_urls, dict):
+        raw_pdf_urls = {}
+
     archive_urls = sorted({
-        url for url in payload.get("archive_urls", [])
+        url for url in raw_archive_urls
         if isinstance(url, str) and is_trusted_archive_url(url)
     })
     pdf_urls = {
         date_key: url
-        for date_key, url in payload.get("pdf_urls", {}).items()
+        for date_key, url in raw_pdf_urls.items()
         if isinstance(date_key, str)
         and isinstance(url, str)
         and is_trusted_archive_url(url)
