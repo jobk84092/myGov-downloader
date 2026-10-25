@@ -35,6 +35,7 @@ ARCHIVE_URLS = [
     "https://www.mygov.go.ke/{year}-issues",
     "https://www.mygov.go.ke/mygov-newspaper-{year}",
     "https://mygov.go.ke/index.php/mygove-issue-{year}",
+    "https://gaa.go.ke/mygove-issue-{year}",
     "https://gaa.go.ke/index.php/mygov-newspaper-{year}",
     "https://ict.go.ke/node/941",
 ]
@@ -56,6 +57,7 @@ MONTH_MAP = {
 
 RETRIES = 3
 TIMEOUT = 15
+MAX_ISSUE_AGE_DAYS = 7
 START_DATE = datetime(2022, 9, 1)
 USER_AGENT = "Mozilla/5.0 (compatible; MyGovArchiveBot/1.0)"
 
@@ -192,6 +194,22 @@ def find_latest_pdf():
 def find_all_pdfs():
     """Scrape all sources to find ALL available English MyGov newspaper PDFs."""
     return scrape_archive_links(backfill=True)
+
+
+def require_recent_issue(all_links):
+    """Fail a scheduled sync when archive discovery has gone stale."""
+    if not all_links:
+        raise RuntimeError("No MyGov PDFs found on any archive source.")
+
+    latest_date = max(file_date.date() for file_date, _, _ in all_links.values())
+    age_days = (datetime.now().date() - latest_date).days
+    if age_days > MAX_ISSUE_AGE_DAYS:
+        raise RuntimeError(
+            f"Latest MyGov issue found is {latest_date} ({age_days} days old); "
+            "check whether the archive source URL has changed."
+        )
+
+    logger.info(f"Latest issue found: {latest_date} ({age_days} days old)")
 
 
 def download_pdf(url, filename):
@@ -379,9 +397,7 @@ def backfill():
     logger.info("Starting MyGov backfill process...")
 
     all_links = find_all_pdfs()
-    if not all_links:
-        logger.warning("No PDFs found.")
-        return
+    require_recent_issue(all_links)
 
     drive_service = authenticate_google_drive()
     existing_names = list_drive_filenames(drive_service) | load_manifest_filenames()
